@@ -14,15 +14,14 @@ type MainActivity () =
     inherit Activity ()
 
     member val items : List<TodoItem> = new List<TodoItem>() with get, set
-    member val allItems : ListView = null with get, set
-    member val taskName : EditText = null with get, set
-    member val addButton : Button = null with get, set
-    member val errorMessage : TextView = null with get, set
 
-    member this.UpdateData() = 
+    member this.GetMainListView() = 
+        this.FindViewById<ListView>(Resource_Id.allItems)
+
+    member this.UpdateData (listView : ListView) = 
         this.items <- App.ItemManager.GetItems()
         let adapter = new ArrayAdapter<TodoItem>(this, Android.Resource.Layout.SimpleListItem1, this.items)
-        this.allItems.Adapter <- adapter
+        this.GetMainListView().Adapter <- adapter
 
     override this.OnCreate (bundle) =
 
@@ -30,12 +29,12 @@ type MainActivity () =
 
         this.SetContentView (Resource_Layout.Main)
 
-        this.taskName <- this.FindViewById<EditText>(Resource_Id.taskName)
-        this.addButton <- this.FindViewById<Button>(Resource_Id.addButton)
-        this.errorMessage <- this.FindViewById<TextView>(Resource_Id.errorMessage)
-        this.allItems <- this.FindViewById<ListView>(Resource_Id.allItems)
+        let taskName = this.FindViewById<EditText>(Resource_Id.taskName)
+        let addButton = this.FindViewById<Button>(Resource_Id.addButton)
+        let errorMessage = this.FindViewById<TextView>(Resource_Id.errorMessage)
+        let allItems = this.FindViewById<ListView>(Resource_Id.allItems)
 
-        this.allItems.ItemClick.Add(fun args -> 
+        allItems.ItemClick.Add(fun args -> 
             let selectedItem = this.items.[args.Position]
 
             let i = new Intent(this, typeof<EditToDoActivity>)
@@ -43,17 +42,18 @@ type MainActivity () =
             this.StartActivity(i) |> ignore
         )
 
-        this.addButton.Click.Add (fun args -> 
+        addButton.Click.Add (fun args -> 
             try
-                App.ItemManager.AddItem(this.taskName.Text) |> ignore
+                App.ItemManager.AddItem(taskName.Text) |> ignore
+                errorMessage.Text <- ""
+                taskName.Text <- ""
+                this.UpdateData(allItems)
             with 
-                | :? Exception -> this.errorMessage.Text <- "There was a problem adding the item. Check that you've provided an item and there are no duplicates"
-            this.taskName.Text <- ""
-            this.UpdateData()
+                | _ -> errorMessage.Text <- "There was a problem adding the item. Check that you've provided an item and there are no duplicates"
         )
 
     override this.OnResume() = 
 
         base.OnResume()
 
-        this.UpdateData()
+        this.UpdateData(this.GetMainListView())

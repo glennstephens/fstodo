@@ -41,7 +41,7 @@ type EditToDoActivity() =
             App.ItemManager.UpdateItem(item) |> ignore
             this.Finish() 
         with 
-            | :? Exception -> errorMessage.Text <- "There was a problem adding the item. Check that your update hasn't resulted in a duplicate item"
+            | _ -> errorMessage.Text <- "There was a problem adding the item. Check that your update hasn't resulted in a duplicate item"
     )
 
     deleteButton.Click.Add(fun args ->
@@ -49,9 +49,5 @@ type EditToDoActivity() =
             App.ItemManager.DeleteItem(item) |> ignore
             this.Finish()  
         with 
-            | :? Exception -> errorMessage.Text <- "There was a problem removing the item."
-
-        
+            | _ -> errorMessage.Text <- "There was a problem removing the item."
     )
-
-
