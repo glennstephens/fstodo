@@ -1,6 +1,7 @@
 ﻿namespace FSharpTodo
 
 open System
+open System.Linq
 open SQLite
 
 type TodoItem() = 
@@ -41,8 +42,7 @@ type ToDoItemManager() =
         this.connection.Delete(item)
 
     member this.GetItems () = 
-        this.connection.Query<'TodoItem>("select * from TodoItem")
+        this.connection.Table<TodoItem>().ToList()
 
     member this.GetItem(id : int) = 
-        let foundItems = this.connection.Query<'TodoItem>("select * from TodoItem where Id = " + id.ToString())
-        foundItems.[0] :> TodoItem
+        this.connection.Find<TodoItem>(id)
